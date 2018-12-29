@@ -3,7 +3,7 @@ package redisjq
 // Message holds message for job queue
 type Message struct {
 	ID    string
-	Topic string
+	Name  string
 	Retry int
 	Value string
 

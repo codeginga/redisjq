@@ -5,7 +5,7 @@ import "context"
 type server struct {
 }
 
-func (s *server) Register(topic string, worker Worker) error {
+func (s *server) RegisterTask(name string, worker Worker) error {
 	return nil
 }
 

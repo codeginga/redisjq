@@ -9,7 +9,7 @@ type Publisher interface {
 
 // Server wraps server methods
 type Server interface {
-	Register(topic string, worker Worker) error
+	RegisterTask(name string, worker Worker) error
 	Start(ctx context.Context) error
 }
 

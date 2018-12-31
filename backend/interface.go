@@ -14,3 +14,9 @@ type Set interface {
 	Add(tim time.Time, key string) (err error)
 	Remove(key string) error
 }
+
+// Task stores current status of the task
+type Task interface {
+	Save(key, value string) (err error)
+	Get(key string) (value string, err error)
+}

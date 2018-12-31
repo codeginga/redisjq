@@ -10,8 +10,7 @@ type Locker interface {
 
 // Set manages set operations
 type Set interface {
-	First() (kye string, err error)
+	First() (key string, err error)
 	Add(tim time.Time, key string) (err error)
-	UpdateTim(tim time.Time, key string) (err error)
 	Remove(key string) error
 }

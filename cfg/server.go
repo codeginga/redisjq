@@ -18,6 +18,9 @@ type Server struct {
 type Task struct {
 	// approximate to run each task in seconds
 	lifeTime *time.Duration
+
+	// name of the task queue
+	QName string
 }
 
 // SetLifeTime sets approximate life time of runing task in second

@@ -2,6 +2,7 @@ package redis
 
 import (
 	"errors"
+	"time"
 
 	"github.com/codeginga/redisjq/backend"
 	"github.com/codeginga/redisjq/cfg"
@@ -27,16 +28,19 @@ func (l *locker) Lock(key string) error {
 }
 
 func (l *locker) Unlock(key string) error {
-	res := l.c.Set(key, key, time.Second * 1)
+	res := l.c.Set(key, key, time.Second*1)
 
-	if err := res.Err(); err := nil {
+	if err := res.Err(); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
 // NewLocker returns instance of locker
-func NewLocker() backend.Locker {
-	return &locker{}
+func NewLocker(redis *redis.Client, tskCfg *cfg.Task) backend.Locker {
+	return &locker{
+		c:      redis,
+		tskCfg: tskCfg,
+	}
 }

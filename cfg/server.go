@@ -20,13 +20,13 @@ type Task struct {
 	lifeTime *time.Duration
 }
 
-// SetLifeTime sets task aproximate life time in seconds
+// SetLifeTime sets approximate life time of runing task in second
 func (t *Task) SetLifeTime(sec int) {
 	d := time.Second * time.Duration(sec)
 	t.lifeTime = &d
 }
 
-// LifeTime returns task's life time in second
+// LifeTime returns life time of running task
 func (t *Task) LifeTime() time.Duration {
 	if t.lifeTime == nil {
 		return cnst.DefaultTaskLifeTime

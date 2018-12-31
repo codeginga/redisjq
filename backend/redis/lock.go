@@ -15,7 +15,7 @@ type locker struct {
 }
 
 func (l *locker) Lock(key string) error {
-	res := l.c.SetNX(key, key, l.tskCfg.LifeTime())
+	res := l.c.SetNX(key, key, l.tskCfg.RunTime())
 	if err := res.Err(); err != nil {
 		return err
 	}

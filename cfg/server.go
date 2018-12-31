@@ -16,24 +16,24 @@ type Server struct {
 
 // Task holds task config
 type Task struct {
-	// approximate to run each task in seconds
-	lifeTime *time.Duration
+	// approximate time to run each task in seconds
+	runTime *time.Duration
 
 	// name of the task queue
 	QName string
 }
 
-// SetLifeTime sets approximate life time of runing task in second
-func (t *Task) SetLifeTime(sec int) {
+// SetRunTime sets approximate time of runing task in second
+func (t *Task) SetRunTime(sec int) {
 	d := time.Second * time.Duration(sec)
-	t.lifeTime = &d
+	t.runTime = &d
 }
 
-// LifeTime returns life time of running task
-func (t *Task) LifeTime() time.Duration {
-	if t.lifeTime == nil {
-		return cnst.DefaultTaskLifeTime
+// RunTime returns time of running task
+func (t *Task) RunTime() time.Duration {
+	if t.runTime == nil {
+		return cnst.DefaultTaskRunTime
 	}
 
-	return *t.lifeTime
+	return *t.runTime
 }

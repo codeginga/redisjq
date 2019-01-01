@@ -17,23 +17,29 @@ type Server struct {
 // Task holds task config
 type Task struct {
 	// approximate time to run each task in seconds
-	runTime *time.Duration
+	RunTime int
+
+	// Message TTL in seconds
+	MessageTTL int
 
 	// name of the task queue
 	QName string
 }
 
-// SetRunTime sets approximate time of runing task in second
-func (t *Task) SetRunTime(sec int) {
-	d := time.Second * time.Duration(sec)
-	t.runTime = &d
-}
-
-// RunTime returns time of running task
-func (t *Task) RunTime() time.Duration {
-	if t.runTime == nil {
+// RunTimeDuration converts RunTime in time.Duration
+func (t *Task) RunTimeDuration() time.Duration {
+	if t.RunTime == 0 {
 		return cnst.DefaultTaskRunTime
 	}
 
-	return *t.runTime
+	return time.Second * time.Duration(t.RunTime)
+}
+
+// MessageTTLDuration converts MessageTTL in time.Duration
+func (t *Task) MessageTTLDuration() time.Duration {
+	if t.MessageTTL == 0 {
+		return cnst.DefaultTaskMessageTTL
+	}
+
+	return time.Second * time.Duration(t.MessageTTL)
 }

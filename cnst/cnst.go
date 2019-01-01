@@ -11,4 +11,8 @@ const (
 
 	// DefaultTaskMessageTTL represents default ttl of a message
 	DefaultTaskMessageTTL time.Duration = time.Second * (60 * 10)
+
+	// RedisEmptyMessage represents message for empty key
+	// "github.com/go-redis/redis" returns this value for empty key
+	RedisEmptyMessage string = "redis: nil"
 )

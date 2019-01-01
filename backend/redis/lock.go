@@ -11,7 +11,7 @@ import (
 
 type locker struct {
 	c      *redis.Client
-	tskCfg *cfg.Task
+	tskCfg cfg.Task
 }
 
 func (l *locker) Lock(key string) error {
@@ -38,7 +38,7 @@ func (l *locker) Unlock(key string) error {
 }
 
 // NewLocker returns instance of locker
-func NewLocker(redis *redis.Client, tskCfg *cfg.Task) backend.Locker {
+func NewLocker(redis *redis.Client, tskCfg cfg.Task) backend.Locker {
 	return &locker{
 		c:      redis,
 		tskCfg: tskCfg,

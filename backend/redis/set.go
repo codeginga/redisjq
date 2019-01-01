@@ -13,7 +13,7 @@ import (
 
 type set struct {
 	c      *redis.Client
-	tskCfg *cfg.Task
+	tskCfg cfg.Task
 }
 
 func (s *set) zkey() string {
@@ -64,7 +64,7 @@ func (s *set) Remove(key string) (err error) {
 }
 
 // NewSet returns instance of backend.Set
-func NewSet(redis *redis.Client, tskCfg *cfg.Task) backend.Set {
+func NewSet(redis *redis.Client, tskCfg cfg.Task) backend.Set {
 	return &set{
 		c:      redis,
 		tskCfg: tskCfg,

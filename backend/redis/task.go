@@ -7,7 +7,7 @@ import (
 )
 
 type task struct {
-	cfg *cfg.Task
+	cfg cfg.Task
 	c   *redis.Client
 }
 
@@ -25,7 +25,7 @@ func (t *task) Get(key string) (value string, err error) {
 }
 
 // NewTask returns instance of backend.Task
-func NewTask(c *redis.Client, cfg *cfg.Task) backend.Task {
+func NewTask(c *redis.Client, cfg cfg.Task) backend.Task {
 	return &task{
 		c:   c,
 		cfg: cfg,

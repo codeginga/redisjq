@@ -6,4 +6,6 @@ type Server struct {
 
 	// maximum number of running worker at a time
 	ConcurrentWorker int
+
+	Task Task
 }

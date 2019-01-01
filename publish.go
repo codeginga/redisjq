@@ -2,6 +2,8 @@ package redisjq
 
 import (
 	"github.com/codeginga/redisjq/backend"
+	"github.com/codeginga/redisjq/backend/redis"
+	"github.com/codeginga/redisjq/cfg"
 	"github.com/codeginga/redisjq/cnst"
 )
 
@@ -30,6 +32,19 @@ func (p *publisher) Publish(msg Message) (err error) {
 }
 
 // NewPublisher returns new instance of Publisher
-func NewPublisher() Publisher {
-	return &publisher{}
+func NewPublisher(cfg cfg.Publisher) (p Publisher, err error) {
+	rc, err := redisClient(cfg.Redis)
+	if err != nil {
+		return
+	}
+
+	set := redis.NewSet(rc, cfg.Task)
+	task := redis.NewTask(rc, cfg.Task)
+	p = &publisher{
+		task:  task,
+		set:   set,
+		qname: cfg.Task.QName,
+	}
+
+	return
 }

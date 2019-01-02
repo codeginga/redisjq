@@ -4,7 +4,6 @@ import (
 	"github.com/codeginga/redisjq/backend"
 	"github.com/codeginga/redisjq/backend/redis"
 	"github.com/codeginga/redisjq/cfg"
-	"github.com/codeginga/redisjq/cnst"
 )
 
 type publisher struct {
@@ -14,7 +13,7 @@ type publisher struct {
 }
 
 func (p *publisher) appQName() string {
-	return cnst.App + "_" + p.qname
+	return keyQName(p.qname)
 }
 
 func (p *publisher) Publish(msg Message) (err error) {
@@ -23,7 +22,7 @@ func (p *publisher) Publish(msg Message) (err error) {
 		return
 	}
 
-	if err = p.task.Save(cnst.App+"_"+msg.ID, strMsg); err != nil {
+	if err = p.task.Save(keyMessage(msg.ID), strMsg); err != nil {
 		return
 	}
 

@@ -6,6 +6,9 @@ const (
 	// App holds app name
 	App string = "redisjq"
 
+	// Separator sperates/concates string
+	Separator string = "#@#"
+
 	// DefaultTaskRunTime represents default life time of running task
 	DefaultTaskRunTime time.Duration = time.Second * 60
 

@@ -15,6 +15,9 @@ const (
 	// DefaultTaskMessageTTL represents default ttl of a message
 	DefaultTaskMessageTTL time.Duration = time.Second * (60 * 10)
 
+	// SleepDuration defines sleep time after run all worker
+	SleepDuration time.Duration = time.Millisecond * 100
+
 	// RedisEmptyMessage represents message for empty key
 	// "github.com/go-redis/redis" returns this value for empty key
 	RedisEmptyMessage string = "redis: nil"

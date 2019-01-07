@@ -3,6 +3,8 @@ package redisjq
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/codeginga/redisjq/cnst"
 )
 
 // Message holds message for job queue
@@ -24,6 +26,11 @@ type Message struct {
 func (m *Message) popupTime() time.Time {
 	t := time.Now().Add(time.Second * time.Duration(m.Delay))
 	return t
+}
+
+// Key generates key for message
+func (m *Message) Key() string {
+	return cnst.App + cnst.Separator + m.ID
 }
 
 // String converts Message to string

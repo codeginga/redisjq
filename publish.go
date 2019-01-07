@@ -7,13 +7,8 @@ import (
 )
 
 type publisher struct {
-	task  backend.Task
-	set   backend.Set
-	qname string
-}
-
-func (p *publisher) appQName() string {
-	return keyQName(p.qname)
+	task backend.Task
+	set  backend.Set
 }
 
 func (p *publisher) Publish(msg Message) (err error) {
@@ -22,11 +17,13 @@ func (p *publisher) Publish(msg Message) (err error) {
 		return
 	}
 
-	if err = p.task.Save(keyMessage(msg.ID), strMsg); err != nil {
+	key := msg.Key()
+
+	if err = p.task.Save(key, strMsg); err != nil {
 		return
 	}
 
-	err = p.set.Add(msg.popupTime(), msg.ID)
+	err = p.set.Add(msg.popupTime(), key)
 	return
 }
 
@@ -40,9 +37,8 @@ func NewPublisher(cfg cfg.Publisher) (p Publisher, err error) {
 	set := redis.NewSet(rc, cfg.Task)
 	task := redis.NewTask(rc, cfg.Task)
 	p = &publisher{
-		task:  task,
-		set:   set,
-		qname: cfg.Task.QName,
+		task: task,
+		set:  set,
 	}
 
 	return

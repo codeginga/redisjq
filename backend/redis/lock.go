@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"errors"
 	"time"
 
 	"github.com/codeginga/redisjq/backend"
@@ -21,7 +20,7 @@ func (l *locker) Lock(key string) error {
 	}
 
 	if !res.Val() {
-		return errors.New("could not acquire the lock for key " + key)
+		return backend.ErrExist
 	}
 
 	return nil

@@ -21,6 +21,9 @@ func (t *task) Save(key, value string) (err error) {
 func (t *task) Get(key string) (value string, err error) {
 	res := t.c.Get(key)
 	value, err = res.Result()
+	if err != nil && errEmpty(err) {
+		err = backend.ErrEmpty
+	}
 	return
 }
 

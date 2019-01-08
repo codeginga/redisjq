@@ -20,3 +20,10 @@ type Task interface {
 	Save(key, value string) (err error)
 	Get(key string) (value string, err error)
 }
+
+// Container contains all backend's interface
+type Container struct {
+	Locker Locker
+	Set    Set
+	Task   Task
+}

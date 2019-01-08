@@ -33,14 +33,14 @@ func (s *set) First() (key string, err error) {
 		return
 	}
 
-	var vals []string
-	vals, err = res.Result()
+	vals, err := res.Result()
 	if err != nil {
 		return
 	}
 
 	if len(vals) == 0 {
-		return "", nil
+		err = backend.ErrEmpty
+		return
 	}
 
 	key = vals[0]

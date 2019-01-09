@@ -4,6 +4,6 @@ import "errors"
 
 // list of backend errors
 var (
-	ErrExist = errors.New("exist")
-	ErrEmpty = errors.New("empty")
+	ErrLocked = errors.New("locked")
+	ErrEmpty  = errors.New("empty")
 )

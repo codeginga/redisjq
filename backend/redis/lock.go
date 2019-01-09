@@ -20,7 +20,7 @@ func (l *locker) Lock(key string) error {
 	}
 
 	if !res.Val() {
-		return backend.ErrExist
+		return backend.ErrLocked
 	}
 
 	return nil

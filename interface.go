@@ -18,5 +18,4 @@ type Task interface {
 	Message() Message
 	Done() error
 	Retry() error
-	RetryDelay() error
 }

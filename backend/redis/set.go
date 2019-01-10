@@ -39,7 +39,7 @@ func (s *set) First() (key string, err error) {
 	}
 
 	if len(vals) == 0 {
-		err = backend.ErrEmptyQ
+		err = cnst.ErrEmptyQ
 		return
 	}
 

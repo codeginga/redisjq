@@ -3,6 +3,7 @@ package redis
 import (
 	"github.com/codeginga/redisjq/backend"
 	"github.com/codeginga/redisjq/cfg"
+	"github.com/codeginga/redisjq/cnst"
 	"github.com/go-redis/redis"
 )
 
@@ -22,7 +23,7 @@ func (t *task) Get(key string) (value string, err error) {
 	res := t.c.Get(key)
 	value, err = res.Result()
 	if err != nil && errEmpty(err) {
-		err = backend.ErrEmptyTask
+		err = cnst.ErrEmptyTask
 	}
 	return
 }

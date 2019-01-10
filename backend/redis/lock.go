@@ -5,6 +5,7 @@ import (
 
 	"github.com/codeginga/redisjq/backend"
 	"github.com/codeginga/redisjq/cfg"
+	"github.com/codeginga/redisjq/cnst"
 	"github.com/go-redis/redis"
 )
 
@@ -20,7 +21,7 @@ func (l *locker) Lock(key string) error {
 	}
 
 	if !res.Val() {
-		return backend.ErrLocked
+		return cnst.ErrLocked
 	}
 
 	return nil

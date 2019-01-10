@@ -2,7 +2,7 @@ package redisjq
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"time"
 
@@ -12,141 +12,112 @@ import (
 	"github.com/codeginga/redisjq/cnst"
 )
 
-type errcont struct {
+type ctxHandler func(*ctx)
+
+type ctx struct {
+	cont backend.Container
+	key  string
+	msg  *Message
+
 	err error
 }
 
-func (e *errcont) recov() {
-	r := recover()
-	if r == nil {
-		return
+func newCtx(cont backend.Container) *ctx {
+	return &ctx{
+		cont: cont,
+		key:  "",
+		msg:  nil,
+		err:  nil,
 	}
-
-	err, ok := r.(error)
-	if !ok {
-		e.err = fmt.Errorf("%v", r)
-		return
-	}
-
-	e.err = err
 }
 
-type mkmsg struct {
-	errcont
+func pickFirst(h ctxHandler) ctxHandler {
+	return func(c *ctx) {
+		k, err := c.cont.Set.First()
+		if err != nil {
+			panic(err)
+		}
 
-	backend backend.Container
-	key     string
-
-	msg *Message
+		c.key = k
+		h(c)
+	}
 }
 
-func (m *mkmsg) fetch() {
-	val, err := m.backend.Task.Get(m.key)
+func lockKey(h ctxHandler) ctxHandler {
+	return func(c *ctx) {
+		if err := c.cont.Locker.Lock(c.key); err != nil {
+			panic(err)
+		}
+
+		h(c)
+	}
+}
+
+func mkMessage(h ctxHandler) ctxHandler {
+	return func(c *ctx) {
+		str, err := c.cont.Task.Get(c.key)
+		if err != nil {
+			panic(err)
+		}
+
+		msg := Message{}
+		err = msg.FrmString(str)
+		if err != nil {
+			panic(err)
+		}
+
+		c.msg = &msg
+
+		h(c)
+	}
+}
+
+func retryCheck(h ctxHandler) ctxHandler {
+	return func(c *ctx) {
+		if c.msg.Retry > -1 {
+			h(c)
+			return
+		}
+
+		if err := c.cont.Set.Remove(c.msg.Key()); err != nil {
+			panic(err)
+		}
+
+		panic(cnst.ErrRetryExit)
+	}
+}
+
+func decrementRetry(c *ctx) {
+	c.msg.Retry--
+	val, err := c.msg.String()
 	if err != nil {
 		panic(err)
 	}
 
-	msg := Message{}
-	err = msg.FrmString(val)
-	if err != nil {
-		panic(err)
-	}
-
-	m.msg = &msg
-}
-
-func (m *mkmsg) valid() {
-	if m.msg.Retry < 0 {
-		m.msg = nil
-	}
-}
-
-func (m *mkmsg) update() {
-	m.msg.Retry--
-	val, err := m.msg.String()
-	if err != nil {
-		panic(err)
-	}
-
-	if err = m.backend.Task.Save(m.msg.Key(), val); err != nil {
+	if err = c.cont.Task.Save(c.msg.Key(), val); err != nil {
 		panic(err)
 	}
 }
 
-func (m *mkmsg) do() {
-	defer m.recov()
+func recov(h ctxHandler) ctxHandler {
+	return func(c *ctx) {
+		defer func() {
+			r := recover()
+			if r == nil {
+				return
+			}
 
-	m.fetch()
-	m.valid()
-	m.update()
-}
+			err, ok := r.(error)
+			if !ok {
+				c.err = errors.New("unknown")
+				return
+			}
 
-func (m *mkmsg) empty() bool {
-	if m.err == backend.ErrEmpty {
-		return true
+			c.err = err
+		}()
+
+		h(c)
 	}
-
-	if m.msg == nil {
-		return true
-	}
-
-	return false
-}
-
-func (m *mkmsg) Do() (*Message, error) {
-	m.do()
-
-	return m.msg, m.err
-}
-
-type pick struct {
-	errcont
-
-	backend backend.Container
-
-	key string
-}
-
-func (p *pick) empty() bool {
-	if p.err == backend.ErrEmpty {
-		return true
-	}
-	return false
-}
-
-func (p *pick) locked() bool {
-	if p.err == backend.ErrLocked {
-		return true
-	}
-
-	return false
-}
-
-func (p *pick) first() {
-	k, err := p.backend.Set.First()
-	if err != nil {
-		panic(err)
-	}
-
-	p.key = k
-}
-
-func (p *pick) lock() {
-	if err := p.backend.Locker.Lock(p.key); err != nil {
-		panic(err)
-	}
-}
-
-func (p *pick) do() {
-	defer p.recov()
-
-	p.first()
-	p.lock()
-}
-
-func (p *pick) Do() (key string, err error) {
-	p.do()
-	return p.key, p.err
 }
 
 type server struct {
@@ -163,36 +134,38 @@ func (s *server) RegisterTask(name string, worker Worker) (err error) {
 	return
 }
 
-func (s *server) runTasks() error {
+func (s *server) runTasks() (err error) {
 	wg := sync.WaitGroup{}
 
 	for i := 0; i < s.concurrentxWorker; {
-		p := pick{backend: s.backend}
-		key, err := p.Do()
-		if p.empty() {
+		c := newCtx(s.backend)
+		h := recov(pickFirst(lockKey(mkMessage(retryCheck(decrementRetry)))))
+		h(c)
+
+		if c.err == cnst.ErrEmptyQ {
 			break
 		}
 
-		if p.locked() {
+		if c.err == cnst.ErrLocked {
 			continue
 		}
 
-		if err != nil {
-			return err
-		}
-
-		m := mkmsg{backend: s.backend, key: key}
-		msg, err := m.Do()
-		if m.empty() {
+		if c.err == cnst.ErrEmptyTask {
 			i++
 			continue
 		}
 
-		if err != nil {
-			return err
+		if c.err == cnst.ErrRetryExit {
+			i++
+			continue
 		}
 
-		w, ok := s.register[msg.Name]
+		if c.err != nil {
+			err = c.err
+			break
+		}
+
+		w, ok := s.register[c.msg.Name]
 		if !ok {
 			i++
 			continue
@@ -201,13 +174,13 @@ func (s *server) runTasks() error {
 		wg.Add(1)
 		go runTask(&task{
 			backend: s.backend,
-			msg:     msg,
+			msg:     c.msg,
 		}, w, &wg)
 	}
 
 	wg.Wait()
 
-	return nil
+	return
 }
 
 func (s *server) Start(ctx context.Context) (err error) {

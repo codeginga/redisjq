@@ -14,6 +14,22 @@ import (
 
 type ctxHandler func(*ctx)
 
+type ctxMiddleware func(ctxHandler) ctxHandler
+
+func mergeMiddleware(h ctxHandler, middlewares ...ctxMiddleware) ctxHandler {
+	if len(middlewares) == 0 {
+		return h
+	}
+
+	middlewareList := []ctxMiddleware(middlewares)
+	handler := middlewareList[len(middlewareList)-1](h)
+	for i := len(middlewareList) - 2; i >= 0; i-- {
+		handler = middlewareList[i](handler)
+	}
+
+	return handler
+}
+
 type ctx struct {
 	cont backend.Container
 	key  string
@@ -139,7 +155,13 @@ func (s *server) runTasks() (err error) {
 
 	for i := 0; i < s.concurrentxWorker; {
 		c := newCtx(s.backend)
-		h := recov(pickFirst(lockKey(mkMessage(retryCheck(decrementRetry)))))
+		h := mergeMiddleware(
+			decrementRetry,
+			pickFirst,
+			lockKey,
+			mkMessage,
+			retryCheck,
+		)
 		h(c)
 
 		if c.err == cnst.ErrEmptyQ {
